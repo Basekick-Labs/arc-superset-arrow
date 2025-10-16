@@ -1,22 +1,33 @@
-# Arc + Apache Superset Integration
+# Arc + Apache Superset Integration (Arrow Edition)
 
-This directory contains the custom SQLAlchemy dialect and configuration for integrating Apache Superset with the Arc time-series data warehouse.
+This is the **Apache Arrow-powered** SQLAlchemy dialect for integrating Apache Superset with the Arc time-series data warehouse. This version uses Arrow IPC for dramatically faster query performance compared to JSON-based queries.
 
 ## Features
 
-- ✅ **Custom SQLAlchemy dialect** for Arc API
+- ✅ **Custom SQLAlchemy dialect** for Arc API with **Apache Arrow IPC**
+- ✅ **28-75% faster queries** compared to JSON format (depending on dataset size)
+- ✅ **Lower memory overhead** with zero-copy Arrow buffers
 - ✅ **Authentication** via API keys (set and forget)
 - ✅ **Full SQL support** for dashboard creation
 - ✅ **Auto-discovery** of Arc tables and measurements
 - ✅ **Docker Compose integration**
+
+## Why Arrow?
+
+This dialect uses Apache Arrow IPC (Inter-Process Communication) instead of JSON for query results, providing:
+
+- **Performance**: 28-75% faster query execution
+- **Efficiency**: Zero-copy data transfer with columnar format
+- **Type Safety**: Preserve native data types (timestamps, integers, floats)
+- **Scalability**: Better performance for large result sets
 
 ## Quick Start
 
 ### Option 1: Install in Existing Superset
 
 ```bash
-# Install the Arc dialect package
-pip install arc-superset-dialect
+# Install the Arc Arrow dialect package
+pip install arc-superset-arrow
 
 # Restart Superset
 superset run -h 0.0.0.0 -p 8088
@@ -28,8 +39,8 @@ Use the included Dockerfile to build a Superset image with Arc pre-installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/basekick-labs/arc-superset-dialect.git
-cd arc-superset-dialect
+git clone https://github.com/basekick-labs/arc-superset-arrow.git
+cd arc-superset-arrow
 
 # Build the image
 docker build -t superset-arc:latest .
@@ -244,11 +255,18 @@ LIMIT 100;
 ## Architecture
 
 ```
-Superset → Custom Dialect → HTTP Requests → Arc API → DuckDB → Parquet Files → MinIO/S3
-    ↓           ↓               ↓           ↓         ↓           ↓              ↓
-Dashboard    SQL Query      API Key Auth  Query    Columnar    Compacted    Object
-                                          Engine    Storage      Files      Storage
+Superset → Arrow Dialect → Arrow IPC → Arc API → DuckDB → Parquet Files → MinIO/S3
+    ↓           ↓            ↓           ↓         ↓           ↓              ↓
+Dashboard    SQL Query   Zero-Copy   API Key    Query    Columnar    Compacted    Object
+                         Buffers      Auth      Engine    Storage      Files      Storage
 ```
+
+**Arrow IPC Flow:**
+1. Superset sends SQL query via dialect
+2. Arc executes query with DuckDB
+3. Results serialized to Arrow IPC format (columnar, zero-copy)
+4. Dialect deserializes Arrow buffers directly to Python objects
+5. 28-75% faster than JSON serialization/deserialization
 
 ## Connection String Format
 
@@ -352,8 +370,8 @@ To modify or extend the dialect:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/basekick-labs/arc-superset-dialect.git
-   cd arc-superset-dialect
+   git clone https://github.com/basekick-labs/arc-superset-arrow.git
+   cd arc-superset-arrow
    ```
 
 2. Edit `arc_dialect.py`

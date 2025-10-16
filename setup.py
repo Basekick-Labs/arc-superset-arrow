@@ -7,18 +7,18 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="arc-superset-dialect",
-    version="1.2.1",
+    name="arc-superset-arrow",
+    version="2.0.0",
     author="Arc Core Team",
     author_email="support@basekick.net",
-    description="SQLAlchemy dialect for Arc time-series database with multi-database support for Apache Superset",
+    description="SQLAlchemy dialect for Arc time-series database with Apache Arrow support for Apache Superset",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/basekick-labs/arc-superset-dialect",
+    url="https://github.com/basekick-labs/arc-superset-arrow",
     project_urls={
-        "Bug Tracker": "https://github.com/basekick-labs/arc-superset-dialect/issues",
-        "Documentation": "https://github.com/basekick-labs/arc-superset-dialect",
-        "Source Code": "https://github.com/basekick-labs/arc-superset-dialect",
+        "Bug Tracker": "https://github.com/basekick-labs/arc-superset-arrow/issues",
+        "Documentation": "https://github.com/basekick-labs/arc-superset-arrow",
+        "Source Code": "https://github.com/basekick-labs/arc-superset-arrow",
     },
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -36,6 +36,7 @@ setup(
     install_requires=[
         "SQLAlchemy>=1.4.0,<3.0.0",
         "requests>=2.31.0",
+        "pyarrow>=21.0.0",
     ],
     entry_points={
         "sqlalchemy.dialects": [

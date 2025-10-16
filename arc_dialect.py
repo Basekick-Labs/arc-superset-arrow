@@ -1,5 +1,5 @@
 """
-Custom SQLAlchemy dialect for Arc API integration with Superset
+Custom SQLAlchemy dialect for Arc API integration with Superset using Apache Arrow
 """
 import json
 import logging
@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse, parse_qs
 
 import requests
+import pyarrow as pa
 from sqlalchemy import pool, text
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.sql import sqltypes
@@ -74,7 +75,7 @@ class ArcCursor:
         self._rows = []
 
     def execute(self, sql: str, parameters=None):
-        """Execute SQL query via Arc API"""
+        """Execute SQL query via Arc API using Apache Arrow IPC"""
         try:
             # Clean up the SQL query
             query = sql.strip()
@@ -85,7 +86,6 @@ class ArcCursor:
             payload = {
                 "sql": query,
                 "limit": 10000,  # Default limit, can be overridden
-                "format": "json"
             }
 
             # Extract LIMIT from SQL if present
@@ -96,11 +96,11 @@ class ArcCursor:
                 if limit_match:
                     payload["limit"] = int(limit_match.group(1))
 
-            logger.info(f"Executing query via Arc API: {query[:200]}...")
+            logger.info(f"Executing query via Arc Arrow API: {query[:200]}...")
 
-            # Make API request
+            # Make API request to Arrow endpoint
             response = self.connection.session.post(
-                f"{self.connection.api_base_url}/query",
+                f"{self.connection.api_base_url}/query/arrow",
                 json=payload,
                 timeout=300  # 5 minute timeout
             )
@@ -110,26 +110,61 @@ class ArcCursor:
             elif response.status_code != 200:
                 raise Exception(f"API request failed: {response.status_code} - {response.text}")
 
-            result = response.json()
+            # Parse Arrow IPC response
+            # The response is Arrow IPC format (stream)
+            arrow_buffer = pa.BufferReader(response.content)
+            arrow_reader = pa.ipc.open_stream(arrow_buffer)
 
-            if not result.get("success", False):
-                error_msg = result.get("error", "Unknown error from Arc API")
-                raise Exception(f"Query failed: {error_msg}")
+            # Read all record batches into a single table
+            arrow_table = arrow_reader.read_all()
 
-            # Process results
-            columns = result.get("columns", [])
-            data = result.get("data", [])
+            # Extract columns and convert to Python lists
+            columns = arrow_table.schema.names
+
+            # Convert Arrow table to list of rows (tuples)
+            # Using to_pydict() and then converting to row format
+            data_dict = arrow_table.to_pydict()
+            num_rows = len(arrow_table)
+
+            # Convert columnar format to row format
+            data = []
+            for i in range(num_rows):
+                row = tuple(data_dict[col][i] for col in columns)
+                data.append(row)
 
             # Set cursor description (column metadata)
-            self.description = [(col, sqltypes.String, None, None, None, None, True) for col in columns]
-            self.rowcount = result.get("row_count", len(data))
+            # Map Arrow types to SQLAlchemy types
+            self.description = []
+            for col_name, arrow_field in zip(columns, arrow_table.schema):
+                sql_type = self._arrow_type_to_sqlalchemy(arrow_field.type)
+                self.description.append((col_name, sql_type, None, None, None, None, True))
+
+            self.rowcount = num_rows
             self._rows = data
 
-            logger.info(f"Query executed successfully: {self.rowcount} rows returned")
+            logger.info(f"Query executed successfully via Arrow: {self.rowcount} rows returned")
 
         except Exception as e:
-            logger.error(f"Error executing query: {e}")
+            logger.error(f"Error executing query via Arrow: {e}")
             raise
+
+    def _arrow_type_to_sqlalchemy(self, arrow_type):
+        """Map Arrow types to SQLAlchemy types"""
+        import pyarrow.types as pat
+
+        if pat.is_integer(arrow_type):
+            return sqltypes.Integer
+        elif pat.is_floating(arrow_type):
+            return sqltypes.Float
+        elif pat.is_boolean(arrow_type):
+            return sqltypes.Boolean
+        elif pat.is_timestamp(arrow_type) or pat.is_date(arrow_type):
+            return sqltypes.DateTime
+        elif pat.is_string(arrow_type) or pat.is_large_string(arrow_type):
+            return sqltypes.String
+        else:
+            # Default to String for unknown types
+            return sqltypes.String
 
     def fetchall(self):
         """Fetch all remaining rows"""
