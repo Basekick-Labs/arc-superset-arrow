@@ -419,7 +419,7 @@ class ArcDialect(Dialect):
                 cursor.execute(sql)
             else:
                 sql = "SHOW TABLES"
-                logger.info(f"Executing: {sql}")
+                logger.info(f"Executing: {sql} (will return tables from ALL databases)")
                 cursor.execute(sql)
 
             tables = set()
@@ -428,19 +428,24 @@ class ArcDialect(Dialect):
                 # database column = database name (default, production, etc.)
                 # table_name column = measurement name (cpu, mem, disk)
                 rows = cursor.fetchall()
-                logger.info(f"SHOW TABLES returned {len(rows)} rows")
+                logger.info(f"SHOW TABLES returned {len(rows)} rows, cursor.description={cursor.description}")
                 for row in rows:
-                    logger.info(f"Row: {row}")
+                    logger.info(f"Row data: {row}, row length: {len(row)}, row types: {[type(v).__name__ for v in row]}")
                     if len(row) >= 2:
                         db_name = row[0]  # database
                         table_name = row[1]  # measurement name
+                        logger.info(f"  Parsed: db_name='{db_name}', table_name='{table_name}'")
 
                         # Filter by schema if specified
                         if schema is None or db_name == schema:
                             tables.add(table_name)
-                            logger.info(f"Added table: {table_name} from database: {db_name}")
+                            logger.info(f"  -> MATCHED: Added table '{table_name}' from database '{db_name}' (schema filter: '{schema}')")
+                        else:
+                            logger.info(f"  -> SKIPPED: db_name '{db_name}' != schema filter '{schema}'")
+                    else:
+                        logger.warning(f"  -> Row too short (expected >= 2 columns, got {len(row)}): {row}")
 
-            logger.info(f"Found {len(tables)} tables in schema '{schema}': {sorted(tables)}")
+            logger.info(f"Final result: Found {len(tables)} tables in schema '{schema}': {sorted(tables)}")
 
             if tables:
                 return sorted(tables)

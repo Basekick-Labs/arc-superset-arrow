@@ -8,7 +8,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="arc-superset-arrow",
-    version="2.0.0",
+    version="1.0.1",
     author="Arc Core Team",
     author_email="support@basekick.net",
     description="SQLAlchemy dialect for Arc time-series database with Apache Arrow support for Apache Superset",
