@@ -100,7 +100,7 @@ class ArcCursor:
 
             # Make API request to Arrow endpoint
             response = self.connection.session.post(
-                f"{self.connection.api_base_url}/query/arrow",
+                f"{self.connection.api_base_url}/api/v1/query/arrow",
                 json=payload,
                 timeout=300  # 5 minute timeout
             )
