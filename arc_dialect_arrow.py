@@ -194,7 +194,7 @@ class ArcDialect(Dialect):
     """SQLAlchemy dialect for Arc API"""
 
     name = "arc"
-    driver = "api"
+    driver = "arrow"
     supports_alter = False
     supports_pk_autoincrement = False
     supports_default_values = False
@@ -302,13 +302,13 @@ class ArcDialect(Dialect):
 
     def create_connect_args(self, url):
         """Parse connection URL and return args for connect()"""
-        # URL format: arc://api-key@host:port/database
+        # URL format: arc+arrow://api-key@host:port/database
         api_key = url.username
         host = url.host
         port = url.port or 8000
 
         if not api_key:
-            raise ValueError("API key required in connection URL (arc://api-key@host:port/db)")
+            raise ValueError("API key required in connection URL (arc+arrow://api-key@host:port/db)")
 
         api_base_url = f"http://{host}:{port}"
 

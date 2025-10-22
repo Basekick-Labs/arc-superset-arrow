@@ -60,7 +60,7 @@ docker restart superset_app
 
 Connection string:
 ```
-arc://YOUR_API_KEY@arc-api:8000/default
+arc+arrow://YOUR_API_KEY@arc-api:8000/default
 ```
 
 ## Option 2: Contribute to Apache Superset

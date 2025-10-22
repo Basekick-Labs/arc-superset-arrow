@@ -8,7 +8,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="arc-superset-arrow",
-    version="1.3.1",
+    version="1.3.3",
     author="Arc Core Team",
     author_email="support@basekick.net",
     description="SQLAlchemy dialect for Arc time-series database with Apache Arrow support for Apache Superset",
@@ -40,6 +40,7 @@ setup(
     ],
     entry_points={
         "sqlalchemy.dialects": [
+            "arc = arc_dialect_arrow:ArcDialect",
             "arc.arrow = arc_dialect_arrow:ArcDialect",
         ]
     },
