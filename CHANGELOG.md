@@ -5,6 +5,20 @@ All notable changes to the Arc Superset Arrow Dialect will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2024-10-22
+
+### Fixed
+- **Critical**: Fixed module name conflict with arc-superset-dialect
+  - Renamed module from `arc_dialect` to `arc_dialect_arrow` to avoid file conflicts
+  - Changed entry point from `arc` to `arc.arrow` for unique registration
+  - Connection string is now: `arc.arrow://user@host:port/database`
+  - Fixes SQLAlchemy "Can't load plugin" error when both dialects are installed
+
+### Changed
+- Module name: `arc_dialect.py` → `arc_dialect_arrow.py`
+- SQLAlchemy dialect name: `arc` → `arc.arrow`
+- Removed redundant `arc.api` entry point
+
 ## [1.3.0] - 2024-10-21
 
 ### Changed

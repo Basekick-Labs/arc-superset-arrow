@@ -55,8 +55,8 @@ except Exception as e:
     print(f"⚠️  Arc dialect registration warning: {e}")
 
 # Example connection string for Arc:
-# arc://YOUR_API_KEY@arc-api:8000/default
-# arc://YOUR_API_KEY@localhost:8000/default
+# arc.arrow://YOUR_API_KEY@arc-api:8000/default
+# arc.arrow://YOUR_API_KEY@localhost:8000/default
 
 # Optional: Set row limit for queries
 ROW_LIMIT = 10000

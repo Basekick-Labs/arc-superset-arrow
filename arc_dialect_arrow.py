@@ -322,10 +322,12 @@ class ArcDialect(Dialect):
         """Test the connection by executing a simple query"""
         try:
             cursor = dbapi_conn.cursor()
-            cursor.execute("SELECT 1")
-            cursor.fetchall()
+            cursor.execute("SELECT 1 as ping")
+            result = cursor.fetchall()
+            logger.info(f"Ping successful: {result}")
             return True
-        except Exception:
+        except Exception as e:
+            logger.error(f"Ping failed: {e}")
             return False
 
     def get_schema_names(self, connection, **kwargs):
