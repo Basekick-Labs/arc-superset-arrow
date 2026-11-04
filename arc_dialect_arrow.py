@@ -43,14 +43,17 @@ class ArcTypeCompiler(GenericTypeCompiler):
 class ArcDBAPIConnection:
     """DBAPI-like connection for Arc API"""
 
-    def __init__(self, api_base_url: str, api_key: str):
+    def __init__(self, api_base_url: str, api_key: str, database: Optional[str] = None):
         self.api_base_url = api_base_url.rstrip('/')
         self.api_key = api_key
+        self.database = database
         self.session = requests.Session()
         self.session.headers.update({
             'X-API-Key': api_key,
             'Content-Type': 'application/json'
         })
+        if database:
+            self.session.headers['X-Arc-Database'] = database
 
     def cursor(self):
         return ArcCursor(self)
@@ -312,11 +315,14 @@ class ArcDialect(Dialect):
 
         api_base_url = f"http://{host}:{port}"
 
-        return ([api_base_url, api_key], {})
+        # SQLAlchemy exposes the URL path as ``database``. Preserve an absent
+        # path as None so Arc can retain its existing default-database behavior.
+        database = url.database or None
+        return ([api_base_url, api_key, database], {})
 
-    def connect(self, api_base_url: str, api_key: str):
-        """Create a connection to Arc API"""
-        return ArcDBAPIConnection(api_base_url, api_key)
+    def connect(self, api_base_url: str, api_key: str, database: Optional[str] = None):
+        """Create a connection to Arc API, optionally scoped to one database."""
+        return ArcDBAPIConnection(api_base_url, api_key, database)
 
     def do_ping(self, dbapi_conn):
         """Test the connection by executing a simple query"""
