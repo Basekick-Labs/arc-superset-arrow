@@ -281,6 +281,11 @@ arc+arrow://your-api-key@arc-api:8000/default
 arc+arrow://your-api-key@arc.example.com:8000/default
 ```
 
+The `DATABASE` path component selects the Arc database for every query through the
+`X-Arc-Database` request header. For example, `/analytics` targets the `analytics`
+database. If the path is omitted, the dialect does not send this header and Arc
+uses its configured default database.
+
 Note: The `+arrow` suffix indicates this dialect uses Apache Arrow IPC format for data transfer.
 
 ## Troubleshooting
