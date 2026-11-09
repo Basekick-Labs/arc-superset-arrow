@@ -376,10 +376,11 @@ class ArcDialect(Dialect):
             cursor = dbapi_conn.cursor()
 
             # Construct the proper table reference with schema
+            quoted_table = self.identifier_preparer.quote(table_name)
             if schema and schema != "default":
-                table_ref = f"{schema}.{table_name}"
+                table_ref = f"{self.identifier_preparer.quote(schema)}.{quoted_table}"
             else:
-                table_ref = table_name
+                table_ref = quoted_table
 
             cursor.execute(f"SELECT 1 FROM {table_ref} LIMIT 1")
             return True
@@ -416,7 +417,7 @@ class ArcDialect(Dialect):
 
             # If schema is specified, query that specific database
             if schema:
-                sql = f"SHOW TABLES FROM {schema}"
+                sql = f"SHOW TABLES FROM {self.identifier_preparer.quote(schema)}"
                 logger.info(f"Executing: {sql}")
                 cursor.execute(sql)
             else:
@@ -471,10 +472,11 @@ class ArcDialect(Dialect):
             cursor = dbapi_conn.cursor()
 
             # Construct the proper table reference with schema
+            quoted_table = self.identifier_preparer.quote(table_name)
             if schema and schema != "default":
-                table_ref = f"{schema}.{table_name}"
+                table_ref = f"{self.identifier_preparer.quote(schema)}.{quoted_table}"
             else:
-                table_ref = table_name
+                table_ref = quoted_table
 
             logger.info(f"Getting columns for table: {table_ref}")
             cursor.execute(f"SELECT * FROM {table_ref} LIMIT 1")
